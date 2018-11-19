@@ -1,6 +1,7 @@
 package com.qatestlab;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -16,32 +17,44 @@ import org.testng.Assert;
 import org.testng.annotations.*;
 
 import java.time.Duration;
+import java.util.Random;
 
 public class ProductTest {
-    private WebDriver driver;
-    private String product = "product";
+     WebDriver driver;
+     String product = generateString();
+     Random random = new Random();
+     String amount = String.valueOf(random.nextInt(100) + 1);
+     String rawPrice = String.format("%.2f",(float)(0.1 + random.nextDouble() * (100.0 - 0.1)));
+     String[] priceSplitted = rawPrice.split(",");
+     String price = priceSplitted[0] + "," + priceSplitted[1];
+             // priceSplitted[0] + "," + priceSplitted[1];
+
     @Parameters("chrome")
     @BeforeTest
     public void setUp(String browser) {
         switch (browser) {
             case "firefox":
                 WebDriverManager.firefoxdriver().setup();
-                driver =  new FirefoxDriver();
+                driver = new FirefoxDriver();
                 break;
             case "ie":
             case "internet explorer":
                 WebDriverManager.iedriver().setup();
-                driver =  new InternetExplorerDriver();
+                driver = new InternetExplorerDriver();
                 break;
             case "chrome":
             default:
                 WebDriverManager.chromedriver().setup();
-                driver =  new ChromeDriver();
+                driver = new ChromeDriver();
                 break;
         }
     }
-    @Test(dataProvider="LoginProvider")
+
+
+    @Test(dataProvider = "LoginProvider")
     public void testCase1(String login, String password) {
+        System.out.println("Raw price: " + rawPrice);
+        System.out.println("Price " + price);
         driver.get("http://prestashop-automation.qatestlab.com.ua/admin147ajyvk0/");
         driver.manage().window().maximize();
         WebElement emailInput = driver.findElement(By.id("email"));
@@ -73,13 +86,15 @@ public class ProductTest {
         // Filling the forms (name, amount, price):
         WebElement productName = driver.findElement(By.id("form_step1_name_1"));
         productName.sendKeys(product);
-        System.out.println("form1 OK");
+        System.out.println("form1 OK " + product);
         WebElement productAmount = driver.findElement(By.id("form_step1_qty_0_shortcut"));
-        productAmount.sendKeys("1");
-        System.out.println("form2 OK");
+        productAmount.clear();
+        productAmount.sendKeys(amount);
+        System.out.println("form2 OK " + amount);
         WebElement productPrice = driver.findElement(By.id("form_step1_price_shortcut"));
-        productPrice.sendKeys("2.0");
-        System.out.println("form3 OK");
+        productPrice.clear();
+        productPrice.sendKeys(price);
+        System.out.println("form3 OK " + price);
         //Clicking the checkbox
         driver.findElement(By.className("switch-input")).click();
         System.out.println("checkbox OK");
@@ -95,9 +110,10 @@ public class ProductTest {
         popup2.click();
         System.out.println("popup2 OK");
 
+
     }
 
-    @Test(dependsOnMethods={"testCase1"})
+    @Test(dependsOnMethods = {"testCase1"})
     public void testCase2() {
         driver.get("http://prestashop-automation.qatestlab.com.ua/");
         WebDriverWait wait = new WebDriverWait(driver, 30);
@@ -109,23 +125,35 @@ public class ProductTest {
         wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#content > section > a")));
         driver.findElement(By.cssSelector("#content > section > a")).click();
         System.out.println("clicked again!");
+        String xPath = "//a[text()[contains(.,'" + product + "')]]";
         // //a[text()[contains(.,'product')]]
-        Assert.assertTrue(driver.findElement(By.xpath("//a[text()[contains(.,'product')]]")).isDisplayed());
+        Assert.assertTrue(driver.findElement(By.xpath(xPath)).isDisplayed());
         System.out.println("FOUNDED");
-
+        driver.findElement(By.xpath(xPath)).click();
+        //Assert.assertEquals(driver.findElement(By.className("h1")).getText(), product, "Unexpected product-name");
+        String currPrice = driver.findElement(By.className("current-price")).getText();
+        Assert.assertTrue(currPrice.startsWith(price));
+        // //*[@id="product-details"]/div[1]/span
+        Assert.assertTrue(driver.findElement(By.xpath("//*[@id=\"product-details\"]/div[1]/span")).
+                getText().startsWith(amount));
     }
+
     @AfterTest
     public void teardown() {
         if (driver != null) {
             driver.quit();
         }
     }
-    @DataProvider(name="LoginProvider")
-    public Object[][] getDataFromDataprovider(){
+
+    @DataProvider(name = "LoginProvider")
+    public Object[][] getDataFromDataprovider() {
         return new Object[][]
                 {
-                        { "webinar.test@gmail.com", "Xcg7299bnSmMuRLp9ITw" }
+                        {"webinar.test@gmail.com", "Xcg7299bnSmMuRLp9ITw"}
                 };
 
+    }
+    private String generateString() {
+        return RandomStringUtils.randomAlphabetic(10);
     }
 }
