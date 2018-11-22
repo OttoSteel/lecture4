@@ -15,6 +15,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.*;
+import org.testng.asserts.SoftAssert;
 
 import java.time.Duration;
 import java.util.Random;
@@ -27,36 +28,17 @@ public class ProductTest {
      String rawPrice = String.format("%.2f",(float)(0.1 + random.nextDouble() * (100.0 - 0.1)));
      String[] priceSplitted = rawPrice.split(",");
      String price = priceSplitted[0] + "," + priceSplitted[1];
-             // priceSplitted[0] + "," + priceSplitted[1];
 
     @Parameters("chrome")
     @BeforeTest
-    public void setUp(String browser) {
-        switch (browser) {
-            case "firefox":
-                WebDriverManager.firefoxdriver().setup();
-                driver = new FirefoxDriver();
-                break;
-            case "ie":
-            case "internet explorer":
-                WebDriverManager.iedriver().setup();
-                driver = new InternetExplorerDriver();
-                break;
-            case "chrome":
-            default:
-                WebDriverManager.chromedriver().setup();
-                driver = new ChromeDriver();
-                break;
-        }
+    public void testSetUp(String browser) {
+        driver = DriverManager.getConfiguredDriver(browser);
     }
 
 
     @Test(dataProvider = "LoginProvider")
     public void testCase1(String login, String password) {
-        System.out.println("Raw price: " + rawPrice);
-        System.out.println("Price " + price);
         driver.get("http://prestashop-automation.qatestlab.com.ua/admin147ajyvk0/");
-        driver.manage().window().maximize();
         WebElement emailInput = driver.findElement(By.id("email"));
         emailInput.sendKeys(login);
         // Filling password-field:
@@ -80,10 +62,11 @@ public class ProductTest {
         WebElement newProduct = driver.findElement(By.id("page-header-desc-configuration-add"));
         newProduct.click();
         // Waiting for the page load:
-        wait.until((ExpectedCondition<Boolean>) wdriver -> ((JavascriptExecutor) driver).executeScript(
+        /*wait.until((ExpectedCondition<Boolean>) wdriver -> ((JavascriptExecutor) driver).executeScript(
                 "return document.readyState"
-        ).equals("complete"));
+        ).equals("complete"));*/
         // Filling the forms (name, amount, price):
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("form_step1_name_1")));
         WebElement productName = driver.findElement(By.id("form_step1_name_1"));
         productName.sendKeys(product);
         System.out.println("form1 OK " + product);
@@ -126,16 +109,18 @@ public class ProductTest {
         driver.findElement(By.cssSelector("#content > section > a")).click();
         System.out.println("clicked again!");
         String xPath = "//a[text()[contains(.,'" + product + "')]]";
-        // //a[text()[contains(.,'product')]]
-        Assert.assertTrue(driver.findElement(By.xpath(xPath)).isDisplayed());
+        // Soft-assertion:
+        SoftAssert softAssertion = new SoftAssert();
+        softAssertion.assertTrue(driver.findElement(By.xpath(xPath)).isDisplayed());
         System.out.println("FOUNDED");
         driver.findElement(By.xpath(xPath)).click();
-        //Assert.assertEquals(driver.findElement(By.className("h1")).getText(), product, "Unexpected product-name");
+        softAssertion.assertEquals(driver.findElement(By.className("h1")).getText(), product.toUpperCase(), "Unexpected product-name");
         String currPrice = driver.findElement(By.className("current-price")).getText();
-        Assert.assertTrue(currPrice.startsWith(price));
+        softAssertion.assertTrue(currPrice.startsWith(price));
         // //*[@id="product-details"]/div[1]/span
-        Assert.assertTrue(driver.findElement(By.xpath("//*[@id=\"product-details\"]/div[1]/span")).
+        softAssertion.assertTrue(driver.findElement(By.xpath("//*[@id=\"product-details\"]/div[1]/span")).
                 getText().startsWith(amount));
+        softAssertion.assertAll();
     }
 
     @AfterTest
