@@ -1,19 +1,12 @@
 package com.qatestlab;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.Assert;
 import org.testng.annotations.*;
 import org.testng.asserts.SoftAssert;
 
@@ -29,7 +22,7 @@ public class ProductTest {
      String[] priceSplitted = rawPrice.split(",");
      String price = priceSplitted[0] + "," + priceSplitted[1];
 
-    @Parameters("chrome")
+    @Parameters("browser")
     @BeforeTest
     public void testSetUp(String browser) {
         driver = DriverManager.getConfiguredDriver(browser);
@@ -38,6 +31,7 @@ public class ProductTest {
 
     @Test(dataProvider = "LoginProvider")
     public void testCase1(String login, String password) {
+        WebDriverWait wait = new WebDriverWait(driver, 30);
         driver.get("http://prestashop-automation.qatestlab.com.ua/admin147ajyvk0/");
         WebElement emailInput = driver.findElement(By.id("email"));
         emailInput.sendKeys(login);
@@ -48,17 +42,19 @@ public class ProductTest {
         WebElement submitButton = driver.findElement(By.name("submitLogin"));
         submitButton.click();
         // Clicking the buttons on the main menu:
-        WebElement katalog = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.presenceOfElementLocated(By.linkText("Каталог")));
+        /*WebElement katalog = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.presenceOfElementLocated(By.linkText("Каталог")));*/
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.linkText("Каталог")));
+        WebElement katalog = driver.findElement(By.linkText("Каталог"));
         WebElement categories = driver.findElement(By.id("subtab-AdminProducts"));
         Actions actions = new Actions(driver);
         actions.moveToElement(katalog).pause(Duration.ofSeconds(5)).click(categories)
                 .build().perform();
-        WebDriverWait wait = new WebDriverWait(driver, 30);
         // Waiting for the page load:
-        wait.until((ExpectedCondition<Boolean>) wdriver -> ((JavascriptExecutor) driver).executeScript(
+        /*wait.until((ExpectedCondition<Boolean>) wdriver -> ((JavascriptExecutor) driver).executeScript(
                 "return document.readyState"
-        ).equals("complete"));
+        ).equals("complete"));*/
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("page-header-desc-configuration-add")));
         WebElement newProduct = driver.findElement(By.id("page-header-desc-configuration-add"));
         newProduct.click();
         // Waiting for the page load:
@@ -100,9 +96,9 @@ public class ProductTest {
     public void testCase2() {
         driver.get("http://prestashop-automation.qatestlab.com.ua/");
         WebDriverWait wait = new WebDriverWait(driver, 30);
-        wait.until((ExpectedCondition<Boolean>) wdriver -> ((JavascriptExecutor) driver).executeScript(
+       /* wait.until((ExpectedCondition<Boolean>) wdriver -> ((JavascriptExecutor) driver).executeScript(
                 "return document.readyState"
-        ).equals("complete"));
+        ).equals("complete"));*/
         //#content > section > a
         // //*[@id="content"]/section/a
         wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#content > section > a")));

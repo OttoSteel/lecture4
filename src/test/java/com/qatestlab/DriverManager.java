@@ -30,11 +30,30 @@ public class DriverManager {
     public static EventFiringWebDriver getConfiguredDriver(String browser) {
         EventFiringWebDriver driver = new EventFiringWebDriver(getDriver(browser));
         driver.register(new EventHandler());
-        //driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
-        //driver.manage().timeouts().pageLoadTimeout(60,TimeUnit.SECONDS);
+        driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+        driver.manage().timeouts().pageLoadTimeout(60,TimeUnit.SECONDS);
         driver.manage().window().maximize();
         Reporter.setEscapeHtml(false);
 
         return driver;
     }
 }
+/*
+<test name="ProductTestChrome"   >
+<parameter name="browser" value="chrome"></parameter>
+<packages>
+<package name="com.qatestlab" />
+</packages>
+</test>
+<test name="ProductTestFirefox"   >
+<parameter name="browser" value="firefox"></parameter>
+<packages>
+<package name="com.qatestlab" />
+</packages>
+</test>
+<test name="ProductTestExplorer"   >
+<parameter name="browser" value="internet explorer"></parameter>
+<packages>
+<package name="com.qatestlab" />
+</packages>
+</test>*/
